@@ -1,0 +1,80 @@
+###########################################################################################################################################################
+###### 
+###### Pipeline section:	Code for running a Mendelian randomization (MR) analysis using g-estimation of structural mean models (SMM)	
+###### Written by:		Grace M. Power
+###### Program:         	R
+###### Packages loaded:		dyplr
+###### Datafiles :		One compiled dataset with IDs, phenotype exposure and outcome data, genetic risk scores for chosen SNP sets and covariates
+###### Objective :		Code to run MR analyses in a lifecourse epidemiology research setting employing SMMs.
+######
+#############################################################################################################################################################
+
+
+# Clean environment
+rm(list=ls())
+
+#############################
+### Set working directory ###
+#############################
+
+setwd ("...")
+# install.packages("dplyr")
+library(dplyr)
+
+#########################
+### Read in datafiles ###
+#########################
+
+dat <- read.delim(".../full_dataset.txt)
+
+###################
+### Subset data ###
+###################
+
+# phenotypes
+
+child_adiposity <- subset(dat, select = c(child_adiposity))
+adult_adiposity <- subset(dat, select = c(adult_adiposity))
+age <- subset(dat, select = c(age))
+sex <- subset(dat, select = c(sex))
+Outcome <- subset(dat, select = c(outcome))
+
+# genetic risk score of interest
+
+child_gws_grs <- subset(dat, select = c(child_gws_grs))
+adult_gws_grs <- subset(dat, select = c(adult_gws_grs))
+
+###############################
+### Analyse data using SMMs ###
+###############################
+
+## Univariable MR ##
+
+# Predict values of the exposure based on linear model for each genetic risk score
+
+predZ_child_gws_grs <- apply(child_gws_grs, 2, function(i){predict(lm(i~1), type="response")})
+predZ_adult_gws_grs <- apply(adult_gws_grs, 2, function(i){predict(lm(i~1), type="response")})
+
+#Run the SMM
+
+smm.child.uvmr.results <- t(outcome)%*%(child_gws_grs - predZ_child_gws_grs)%*%t(child_gws_grs - predZ_child_gws_grs)%*%child_adiposity%*%solve(t(child_adiposity)%*%(child_gws_grs - predZ_child_gws_grs)%*%t(child_gws_grs - predZ_child_gws_grs)%*%child_adiposity)
+names(smm.results) <- c("psi.hat")
+
+smm.adult.uvmr.results <- t(outcome)%*%(adult_gws_grs - predZ_adult_gws_grs)%*%t(adult_gws_grs - predZ_adult_gws_grs)%*%adult_adiposity%*%solve(t(adult_adiposity)%*%(adult_gws_grs - predZ_adult_gws_grs)%*%t(adult_gws_grs - predZ_adult_gws_grs)%*%adult_adiposity)
+names(smm.results) <- c("psi.hat")
+
+## Multivariable MR ##
+
+# Bind exposure phenotypes, genetic risk scores and predicted values based on linear model object
+
+bind_adiposity_pheno <- cbind(child_adiposity, adult_adiposity)
+
+child_gws_grs_calc <- child_gws_grs - predZ_child_gws_grs
+adult_gws_grs_calc <- child_gws_grs - predZ_adult_gws_grs
+
+bind_gws_grs <- cbind(child_gws_grs_calc, adult_gws_grs_calc)
+
+#Run the SMM
+
+smm.mvmr.results <- t(outcome)%*%(bind_gws_grs)%*%t(bind_gws_grs)%*%bind_adiposity_pheno%*%solve(t(bind_adiposity_pheno)%*%(bind_gws_grs)%*%t(bind_gws_grs)%*%bind_adiposity_pheno)
+names(smm.mvmr.results) <- c("psi.hat")
