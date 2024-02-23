@@ -1,2 +1,4 @@
 # SMM-MR
 Code for running a Mendelian randomization (MR) analysis using g-estimation of structural mean models (SMM)
+
+This code uses an example inspired by the associated manuscript which investigates the effects of childhood and adulthood adiposity with GRSs generated from genetic variants strongly associated with childhood adiposity at genome wide significance (P≤ 5×10^-8) and adulthood adiposity at genome wide significance (P ≤ 5×10^-8). In a univariable setting, this code can be applied using GRSs generated from genetic variants strongly associated with childhood adiposity at genome wide significance (P≤ 5×10^-8) and not adulthood adiposity (exclude SNPs that are associated with adulthood adiposity and adulthood adiposity at genome wide significance (P ≤ 5×10^-8) and not childhood adiposity (exclude SNPs that are associated with childhood adiposity), respectively.
